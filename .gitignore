@@ -1,0 +1,101 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Laravel (backend/)
+backend/vendor/
+backend/node_modules/
+backend/.phpunit.result.cache
+backend/.phpunit.cache
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/app/public/*
+backend/bootstrap/cache/*
+backend/public/hot
+backend/public/storage
+backend/npm-debug.log
+backend/yarn-error.log
+backend/auth.json
+backend/.fleet
+backend/.nova
+backend/Homestead.json
+backend/Homestead.yaml
+
+# Python (embedding-service/)
+embedding-service/__pycache__/
+embedding-service/**/__pycache__/
+embedding-service/*.py[cod]
+embedding-service/*$py.class
+embedding-service/.pytest_cache/
+embedding-service/.mypy_cache/
+embedding-service/.ruff_cache/
+embedding-service/.venv/
+embedding-service/venv/
+embedding-service/env/
+embedding-service/.env
+embedding-service/*.egg-info/
+embedding-service/dist/
+embedding-service/build/
+embedding-service/.coverage
+embedding-service/htmlcov/
+
+# React Native / Expo (mobile/)
+mobile/node_modules/
+mobile/.expo/
+mobile/.expo-shared/
+mobile/dist/
+mobile/npm-debug.log*
+mobile/yarn-debug.log*
+mobile/yarn-error.log*
+mobile/.env
+mobile/.env.local
+mobile/android/
+mobile/ios/
+mobile/web-build/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.orig.*
+
+# Docker
+docker-compose.override.yml
+*.log
+
+# ML model cache (downloaded at runtime)
+embedding-service/.cache/
+embedding-service/models/
+
+# Test / coverage artifacts
+coverage/
+*.lcov
+.nyc_output/
+
+# Misc
+*.sqlite
+*.sqlite3
+*.db
+tmp/
+temp/
+.cache/

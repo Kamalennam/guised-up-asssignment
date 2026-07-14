@@ -1,0 +1,6 @@
+{
+  "name": "guised-up/backend",
+  "description": "Guised Up Laravel API — placeholder composer.json pending Laravel installation",
+  "type": "project",
+  "require": {}
+}

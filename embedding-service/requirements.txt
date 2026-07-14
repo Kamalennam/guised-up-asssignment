@@ -1,0 +1,6 @@
+# Placeholder — Python dependencies pending implementation
+# See docs/TSD.md Section 10 for frozen versions
+
+fastapi==0.115.6
+uvicorn==0.32.1
+sentence-transformers==3.3.1

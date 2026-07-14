@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GuisedUpInteractionType",
+  "description": "Shared interaction type enum for Laravel, Python, and React Native",
+  "type": "string",
+  "enum": ["view", "reply", "reaction", "share"],
+  "x-weights": {
+    "view": 1,
+    "reaction": 3,
+    "reply": 5,
+    "share": 8
+  }
+}

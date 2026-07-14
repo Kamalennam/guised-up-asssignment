@@ -1,0 +1,1 @@
+// Placeholder — ErrorState pending implementation

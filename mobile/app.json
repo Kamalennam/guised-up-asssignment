@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Guised Up",
+    "slug": "guised-up",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "sdkVersion": "52.0.0"
+  }
+}

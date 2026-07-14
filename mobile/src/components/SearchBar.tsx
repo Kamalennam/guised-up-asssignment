@@ -1,0 +1,1 @@
+// Placeholder — SearchBar pending implementation
