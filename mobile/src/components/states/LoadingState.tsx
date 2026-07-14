@@ -1,1 +1,0 @@
-// Placeholder — LoadingState pending implementation

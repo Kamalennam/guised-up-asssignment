@@ -1,2 +1,17 @@
-# Placeholder — Embedding service Dockerfile pending implementation
-# Base image: Python 3.12.8
+FROM python:3.12.8-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TRANSFORMERS_CACHE=/app/.cache \
+    HF_HOME=/app/.cache
+
+COPY embedding-service/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY embedding-service/app ./app
+
+EXPOSE 8001
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

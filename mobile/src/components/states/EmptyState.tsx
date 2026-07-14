@@ -1,1 +1,0 @@
-// Placeholder — EmptyState pending implementation

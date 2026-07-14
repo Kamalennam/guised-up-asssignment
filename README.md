@@ -4,11 +4,9 @@
 
 ## Project Overview
 
-<!-- TODO: Describe what Guised Up is and what this repository demonstrates -->
+Guised Up is a social platform for authentic online connection. This repository implements the Real Connections Feed — a personalized recommendation stream ranked by semantic similarity, relationship depth, authenticity, and time decay rather than likes, shares, or follower counts.
 
-Guised Up is a social platform for authentic online connection. This repository implements the **Real Connections Feed** — a personalized recommendation stream ranked by semantic similarity, relationship depth, authenticity, and time decay — **not** by likes, shares, or follower counts.
-
-**Assessment scope:** Feed API, Semantic Search, Interactions, Ranking Engine, React Native Feed Screen, SQL Analytics.
+The implementation covers the core assessment workflow: Laravel API authentication, post creation, personalized feed ranking, semantic search, interaction logging, a React Native feed screen, SQL analytics queries, and tests.
 
 **Architecture document:** [docs/TSD.md](docs/TSD.md)
 
@@ -16,19 +14,15 @@ Guised Up is a social platform for authentic online connection. This repository 
 
 ## Architecture
 
-<!-- TODO: Add stack diagram and service responsibilities table -->
+### Stack
 
-### Stack (Frozen)
-
-| Layer | Technology | Version |
-|-------|------------|---------|
-| Mobile | React Native + Expo | 0.76.5 / SDK 52 |
-| API | Laravel | 11.45 |
-| Runtime | PHP | 8.3.20 |
-| ML Service | FastAPI + Python | 0.115.6 / 3.12.8 |
-| Database | PostgreSQL + pgvector | 16.6 / 0.8.0 |
-| Tooling | Node.js | 22.14.0 LTS |
-| Containers | Docker + Compose | 27.4.0 / 2.32.1 |
+| Layer | Technology |
+|-------|------------|
+| Mobile | React Native + Expo |
+| API | Laravel 11 + Sanctum |
+| ML Service | FastAPI + Python |
+| Database | PostgreSQL + pgvector |
+| Tooling | Docker Compose, Node.js |
 
 ### Ranking Weights
 
@@ -39,31 +33,25 @@ Guised Up is a social platform for authentic online connection. This repository 
 | Authenticity | 20% |
 | Time Decay | 10% |
 
-### Vector DB
+### Vector DB Choice
 
-<!-- TODO: Brief rationale for pgvector choice -->
+pgvector is used inside PostgreSQL so the backend can keep relational data and vector embeddings in a single system for the assessment MVP.
 
 ---
 
 ## Prerequisites
 
-<!-- TODO: List required tools -->
-
-- Docker Engine 27.4+
+- Docker Engine 27+
 - Docker Compose 2.32+
-- Node.js 22.14.0 LTS (for mobile development)
-- Git
-
-Optional for local non-Docker development:
-- PHP 8.3.20
+- Node.js 22.14 LTS
+- PHP 8.3+
 - Composer 2.x
-- Python 3.12.8
+- Python 3.12+
+- Git
 
 ---
 
 ## Setup Instructions
-
-<!-- TODO: Complete setup steps after implementation -->
 
 ```bash
 # 1. Clone the repository
@@ -75,73 +63,57 @@ cp backend/.env.example backend/.env
 cp embedding-service/.env.example embedding-service/.env
 cp mobile/.env.example mobile/.env
 
-# 3. Start services
-docker compose -f docker/docker-compose.yml up -d
+# 3. Start the stack
+cd docker
+docker compose up -d
 
 # 4. Run migrations and seed data
-# docker compose exec laravel php artisan migrate --seed
+cd ../backend
+php artisan migrate --seed
 ```
 
 ---
 
 ## Environment Variables
 
-### Backend (Laravel) — `backend/.env.example`
+### Backend
 
-| Variable | Description |
-|----------|-------------|
-| `APP_URL` | Laravel application URL |
-| `DB_*` | PostgreSQL connection settings |
-| `EMBEDDING_SERVICE_URL` | Python embedding service URL |
-| `EMBEDDING_PROVIDER` | `http` or `mock` |
-| `FEED_WEIGHT_*` | Ranking weight overrides |
+- APP_URL
+- DB_HOST / DB_PORT / DB_DATABASE / DB_USERNAME / DB_PASSWORD
+- EMBEDDING_SERVICE_URL
+- EMBEDDING_PROVIDER
+- FEED_WEIGHT_SEMANTIC / FEED_WEIGHT_RELATIONSHIP / FEED_WEIGHT_AUTHENTICITY / FEED_WEIGHT_TIME
 
-### Embedding Service — `embedding-service/.env.example`
+### Embedding Service
 
-| Variable | Description |
-|----------|-------------|
-| `MODEL_NAME` | Sentence-transformer model name |
-| `LOG_LEVEL` | Logging verbosity |
+- MODEL_NAME
+- LOG_LEVEL
 
-### Mobile — `mobile/.env.example`
+### Mobile
 
-| Variable | Description |
-|----------|-------------|
-| `EXPO_PUBLIC_API_URL` | Laravel API base URL |
+- EXPO_PUBLIC_API_URL
 
 ---
 
-## Running Backend
-
-<!-- TODO: Complete after Laravel implementation -->
+## Run Backend
 
 ```bash
-# Via Docker
-docker compose -f docker/docker-compose.yml up laravel postgres redis
-
-# Local development
-# cd backend && php artisan serve
+cd backend
+php artisan serve
 ```
 
 ---
 
-## Running Python Service
-
-<!-- TODO: Complete after FastAPI implementation -->
+## Run Python Service
 
 ```bash
-# Via Docker
-docker compose -f docker/docker-compose.yml up embedding
-
-# Local development
-# cd embedding-service && uvicorn app.main:app --host 0.0.0.0 --port 8001
+cd embedding-service
+uvicorn app.main:app --host 0.0.0.0 --port 8001
 ```
 
 ---
 
-## Running Mobile App
-
-<!-- TODO: Complete after React Native implementation -->
+## Run Mobile App
 
 ```bash
 cd mobile
@@ -151,37 +123,27 @@ npx expo start
 
 ---
 
-## Running Tests
-
-<!-- TODO: Complete after test implementation -->
+## Run Tests
 
 ```bash
-# All tests
-./scripts/run-tests.sh
-
-# Laravel only
-# cd backend && php artisan test
-
-# Python only
-# cd embedding-service && pytest
+cd backend
+php artisan test
 ```
 
 ---
 
 ## Docker
 
-<!-- TODO: Complete service port mapping after Docker implementation -->
-
 ```bash
-# Start full stack
-docker compose -f docker/docker-compose.yml up
-
-# Service ports (planned)
-# Laravel API:  :8000
-# Embedding API: :8001
-# PostgreSQL:    :5432
-# Redis:         :6379
+cd docker
+docker compose up
 ```
+
+Service ports:
+- Laravel API: 8000
+- Embedding API: 8001
+- PostgreSQL: 5432
+- Redis: 6379
 
 ---
 
@@ -189,49 +151,41 @@ docker compose -f docker/docker-compose.yml up
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/login` | Obtain Sanctum token | No |
-| POST | `/api/posts` | Create a new post | Yes |
-| GET | `/api/feed` | Personalized feed (20/page) | Yes |
-| GET | `/api/search?q=` | Semantic search (top 10) | Yes |
-| POST | `/api/interactions` | Log view/reply/reaction | Yes |
+| POST | /api/auth/login | Obtain Sanctum token | No |
+| POST | /api/posts | Create a new post | Yes |
+| GET | /api/feed | Personalized feed (20/page) | Yes |
+| GET | /api/search?q= | Semantic search (top 10) | Yes |
+| POST | /api/interactions | Log view/reply/reaction/share | Yes |
 
 ---
 
 ## SQL Queries
 
-Analytics queries are located in [`sql/queries.sql`](sql/queries.sql):
-
-- **D1:** Top 10 most active users (last 7 days)
-- **D2:** Posts from most-interacted authors (last 30 days)
-- **D3:** High-view, zero-reaction posts
-- **D4:** Spam detection (>20 posts in 24 hours)
+Analytics queries are located in [sql/queries.sql](sql/queries.sql).
 
 ---
 
 ## AI Tools Used
 
-<!-- TODO: Document honest AI tool usage during development -->
-
 | Tool | Usage |
 |------|-------|
-| Cursor (Agent) | Architecture, scaffolding, implementation |
-| Claude | Design review, edge case analysis |
-
----
-
-## Demo Video
-
-<!-- TODO: Add link to recorded walkthrough -->
-
-[Demo video link pending]
+| GitHub Copilot | Implementation, refactoring, verification |
+| Cursor / editor agent tools | Scaffolding and rapid iteration |
 
 ---
 
 ## Known Limitations
 
-<!-- TODO: Document deferred items and time-box trade-offs -->
+- Embedding generation uses a deterministic mock fallback when the Python service is unavailable so the MVP remains functional offline.
+- Search is semantic and heuristic rather than a full production vector index tuning layer.
 
-- Implementation in progress — see project milestones in TSD.
+---
+
+## Future Improvements
+
+- Replace the mock embedding fallback with a hosted or local transformer service for richer embeddings.
+- Add caching for feed generation and expand ranking features with more interaction signals.
+- Add mobile auth screens and a more polished feed UI.
 
 ---
 

@@ -1,6 +1,7 @@
 <?php
 
-// Placeholder — feed configuration pending implementation
-// Frozen weights: semantic=0.40, relationship=0.30, authenticity=0.20, time=0.10
-
-return [];
+return [
+    'candidate_limit' => (int) env('FEED_CANDIDATE_LIMIT', 500),
+    'candidate_days' => (int) env('FEED_CANDIDATE_DAYS', 30),
+    'per_page' => (int) env('FEED_PER_PAGE', 20),
+];
