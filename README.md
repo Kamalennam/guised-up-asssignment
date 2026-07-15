@@ -254,7 +254,11 @@ php artisan migrate:fresh --seed
 
 Loom Recording
 
-https://loom.com/xxxxxxxx
+1. Project Overview & Architecture
+https://www.loom.com/share/9068bef9104748df89e649320f56c9b3
+
+2. Mobile Application Demo
+https://www.loom.com/share/3b416d1e918f48899213534450e2c096
 
 
 
