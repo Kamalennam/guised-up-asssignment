@@ -5,6 +5,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -12,10 +13,13 @@ import {
 } from 'react-native';
 
 import { createPost, fetchFeed, logInteraction, searchFeed, type FeedPost } from '../api/feed';
+import { FeedSkeleton } from '../components/feed/FeedSkeleton';
+import { useAuth } from '../context/AuthContext';
 import { theme } from '../theme';
 
 export function HomeScreen() {
   const queryClient = useQueryClient();
+  const { logout, user } = useAuth();
   const [query, setQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -36,6 +40,8 @@ export function HomeScreen() {
     queryKey: ['feed'],
     queryFn: ({ pageParam = 1 }) => fetchFeed(pageParam as number),
     initialPageParam: 1,
+    placeholderData: (previousData) => previousData,
+    staleTime: 30_000,
     getNextPageParam: (lastPage) => {
       const meta = lastPage.meta;
       if (!meta) {
@@ -46,7 +52,10 @@ export function HomeScreen() {
     },
   });
 
-  const posts = useMemo(() => data?.pages.flatMap((page) => page.data ?? []) ?? [], [data]);
+  const posts = useMemo(
+    () => (data?.pages ?? []).flatMap((page: { data?: FeedPost[] } | undefined) => page?.data ?? []),
+    [data],
+  );
 
   const { data: searchResults = [] } = useQuery({
     queryKey: ['search', searchTerm],
@@ -70,21 +79,22 @@ export function HomeScreen() {
     },
   });
 
-  const loading = isFetching && posts.length === 0;
-  const refreshing = isFetching && posts.length > 0;
+  const hasCachedPosts = posts.length > 0;
+  const initialLoading = isFetching && !hasCachedPosts;
+  const refreshing = isFetching && hasCachedPosts;
   const error = feedError ? 'Unable to load the feed right now.' : null;
 
   const emptyState = useMemo(() => {
-    if (loading) {
-      return <ActivityIndicator size="large" color={theme.colors.primary} />;
+    if (initialLoading) {
+      return null;
     }
 
-    if (!loading && posts.length === 0) {
+    if (!initialLoading && posts.length === 0) {
       return <Text style={styles.emptyText}>No posts yet. Write the first one.</Text>;
     }
 
     return null;
-  }, [loading, posts.length]);
+  }, [initialLoading, posts.length]);
 
   function handleRefresh() {
     void refetch();
@@ -106,8 +116,16 @@ export function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerCard}>
-        <Text style={styles.title}>Guised Up</Text>
-        <Text style={styles.subtitle}>Real Connections Feed</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>Guised Up</Text>
+            <Text style={styles.subtitle}>Real Connections Feed</Text>
+          </View>
+          <Pressable onPress={() => void logout()} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </Pressable>
+        </View>
+        {user ? <Text style={styles.userText}>Signed in as {user.name}</Text> : null}
       </View>
 
       <View style={styles.searchBox}>
@@ -138,47 +156,67 @@ export function HomeScreen() {
         </View>
       )}
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error && hasCachedPosts ? <View style={styles.retryBanner}><Text style={styles.retryText}>{error}</Text></View> : null}
+      {error && !hasCachedPosts ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {emptyState}
+      {initialLoading ? <FeedSkeleton /> : null}
 
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => String(item.id)}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        onEndReached={() => {
-          if (!isFetchingNextPage && hasNextPage) {
-            void fetchNextPage();
+      {!initialLoading && posts.length === 0 && !error ? emptyState : null}
+
+      {!initialLoading && posts.length > 0 ? (
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => String(item.id)}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          onEndReached={() => {
+            if (!isFetchingNextPage && hasNextPage) {
+              void fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.3}
+          contentContainerStyle={styles.listContent}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              </View>
+            ) : null
           }
-        }}
-        onEndReachedThreshold={0.3}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{(item.author?.username ?? 'u').slice(0, 2).toUpperCase()}</Text>
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{(item.author?.username ?? 'u').slice(0, 2).toUpperCase()}</Text>
+                </View>
+                <View style={styles.meta}>
+                  <Text style={styles.username}>@{item.author?.username ?? 'unknown'}</Text>
+                  <Text style={styles.time}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                </View>
               </View>
-              <View style={styles.meta}>
-                <Text style={styles.username}>@{item.author?.username ?? 'unknown'}</Text>
-                <Text style={styles.time}>{new Date(item.created_at).toLocaleDateString()}</Text>
+
+              {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.image} /> : null}
+
+              <Text style={styles.postText}>{item.text}</Text>
+
+              <View style={styles.actions}>
+                <Pressable onPress={() => void handleReaction(item)} style={styles.reactionButton}>
+                  <Text style={styles.reactionText}>♡ React</Text>
+                </Pressable>
+                <Text style={styles.score}>score {item.feed_score?.toFixed(2)}</Text>
               </View>
             </View>
-
-            {item.image_url ? <Image source={{ uri: item.image_url }} style={styles.image} /> : null}
-
-            <Text style={styles.postText}>{item.text}</Text>
-
-            <View style={styles.actions}>
-              <Pressable onPress={() => void handleReaction(item)} style={styles.reactionButton}>
-                <Text style={styles.reactionText}>♡ React</Text>
-              </Pressable>
-              <Text style={styles.score}>score {item.feed_score?.toFixed(2)}</Text>
-            </View>
-          </View>
-        )}
-      />
+          )}
+        />
+      ) : null}
     </View>
   );
 }
@@ -196,6 +234,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flex: 1,
+  },
   title: {
     color: theme.colors.text,
     fontSize: 28,
@@ -205,6 +251,23 @@ const styles = StyleSheet.create({
   subtitle: {
     color: theme.colors.textMuted,
     fontSize: 16,
+  },
+  userText: {
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    marginTop: theme.spacing.xs,
+  },
+  logoutButton: {
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  logoutText: {
+    color: theme.colors.primary,
+    fontWeight: '700',
   },
   searchBox: {
     flexDirection: 'row',
@@ -259,6 +322,20 @@ const styles = StyleSheet.create({
     color: '#b45309',
     marginHorizontal: theme.spacing.md,
     marginTop: theme.spacing.sm,
+  },
+  retryBanner: {
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  retryText: {
+    color: '#92400E',
+    fontWeight: '600',
   },
   listContent: {
     padding: theme.spacing.md,
@@ -338,5 +415,9 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     textAlign: 'center',
     marginTop: theme.spacing.lg,
+  },
+  footerLoader: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
   },
 });

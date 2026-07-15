@@ -1,8 +1,8 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { AuthProvider } from './src/context/AuthContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useAppStore } from './src/store/appStore';
 
@@ -24,10 +24,10 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <NavigationContainer>
+      <AuthProvider>
         <StatusBar style="dark" />
         <AppNavigator />
-      </NavigationContainer>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
